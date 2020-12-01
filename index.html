@@ -12,7 +12,12 @@
 </head>
 
 <body>
-
+  <div style="padding: 20px;">
+    <button id="sign-in-or-out-button" style="margin-left: 25px">Sign In/Authorize</button>
+    <button id="revoke-access-button" style="display: none; margin-left: 25px">Revoke access</button>
+    <div id="auth-status" style="display: inline; padding-left: 25px">You have not authorized this app or you are signed
+      out.</div>
+  </div>
   <div class="carousel">
 
   </div>
@@ -21,6 +26,10 @@
   <script type="text/javascript" src="slick/slick.js"></script>
   <script type="text/javascript" src="index.js"></script>
   <script type="text/javascript" src="images.js"></script>
+  <script type="text/javascript" src="auth.js"></script>
+  <script async defer src="https://apis.google.com/js/api.js" onload="this.onload=function(){};handleClientLoad()"
+    onreadystatechange="if (this.readyState === 'complete') this.onload()">
+    </script>
 
 </body>
 
