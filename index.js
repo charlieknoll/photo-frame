@@ -1,14 +1,5 @@
 window.photoFrame = window.photoFrame || {}
 
-document.addEventListener('visibilitychange', function () {
-  if (document.visibilityState === 'visible') {
-    console.log('visible')
-  } else {
-    console.log('hidden')
-  }
-})
-console.log('test')
-
 function ViewModel() {
   var self = this
   self.gapiClient = null
@@ -18,25 +9,24 @@ function ViewModel() {
     speed: 500,
     fade: true,
     cssEase: 'linear',
-    autoplay: true
+    autoplay: true,
+    lazyLoad: 'ondemand'
   }
-  self.loadPhotoDetail = async function (id) {
-    return self.gapiClient.photoslibrary.mediaItems
-      .get({ mediaItemId: id })
-      .then((response) => {
-        return response.result
-      })
-      .catch(function (e) {
-        return undefined
-      })
+  self.images = []
+  self.shuffle = function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    }
+    return arr
   }
-
-  self.addImages = async function (images) {
-    //<div><img class=" full-screen-width" src="images/image4.jpg"></div>
+  self.addImages = async function () {
     var html = ''
-    for (var i = 0; i < images.length; i++) {
-      //const imageDetail = await self.loadPhotoDetail(images[i].id)
-      html += `<div><img class=" full-screen-width" src="${images[i].baseUrl}"></div>`
+    self.images = self.shuffle(self.images)
+    const h = window.innerHeight
+    const w = window.innerWidth
+    for (var i = 0; i < self.images.length; i++) {
+      html += `<div><img class=" full-screen-width" data-lazy="${self.images[i].baseUrl}=w${w}-h${h}"></div>`
     }
     self.carouselEl.innerHTML = html
   }
@@ -48,36 +38,35 @@ function ViewModel() {
     return self.gapiClient.photoslibrary.albums
       .list({})
       .then(function (fullResponse) {
-        // { result: { albums } }
         const albums = fullResponse.result.albums
-        // Handle the results here (response.result has the parsed body).
         return albums
       })
   }
-  self.getImages = async function (id) {
-    const album = await this.gapiClient.photoslibrary.albums
-      .get({ albumId: id })
-      .then((response) => {
-        return response.result
-      })
-      .then((album) => {
-        //console.log('loadAlbumDetail album', album)
-        return this.gapiClient.photoslibrary.mediaItems
-          .search({ albumId: id })
-          .then(function (response) {
-            //console.log('loadAlbumDetail then response', response)
-
-            // join album data with mediaItems corresponding to album
-            return {
-              ...album,
-              result: response.result
-            }
-          })
+  self.getAlbumImageChunk = function (id, nextPageToken) {
+    return self.gapiClient.photoslibrary.mediaItems
+      .search({ albumId: id, pageToken: nextPageToken, pageSize: 100 })
+      .then(function (response) {
+        self.images = self.images.concat(response.result.mediaItems)
+        return response.result.nextPageToken
       })
       .catch(function (e) {
         return undefined
       })
-    self.addImages(album.result.mediaItems)
+  }
+  self.getImages = async function (id) {
+    const response = await self.gapiClient.photoslibrary.albums.get({
+      albumId: id
+    })
+    const album = response.result
+    var nextPageToken = null
+    var i = 0
+    while (self.images.length < Number(album.mediaItemsCount) && i < 5) {
+      await self
+        .getAlbumImageChunk(id, nextPageToken)
+        .then((token) => (nextPageToken = token))
+      i++
+    }
+    self.addImages()
   }
   self.playPause = function () {}
   self.init = async function (gapiClient) {
@@ -92,8 +81,6 @@ function ViewModel() {
       return
     }
     await self.getImages(result[0].id)
-    //console.log(self.loadAlbums())
-    //self.addImages(self.images)
     self.slick = $('.carousel').slick(self.slickSettings)
   }
 }

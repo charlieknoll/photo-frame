@@ -67,7 +67,9 @@ function setSigninStatus() {
   var isAuthorized = user.hasGrantedScopes(SCOPE)
   if (isAuthorized) {
     $('#sign-in-or-out-button').html('Sign out')
-    $('#revoke-access-button').css('display', 'inline-block')
+    $('#settings-panel').css('display', 'none')
+    $('#sign-in-or-out-button').css('display', 'none')
+    $('#revoke-access-button').css('display', 'none')
     $('#auth-status').html(
       'You are currently signed in and have granted ' + 'access to this app.'
     )
