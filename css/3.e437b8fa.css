@@ -1,0 +1,1 @@
+.q-transition--slide-fade-enter-active{transition:all 3s cubic-bezier(0.33,1,0.68,1)}.q-transition--slide-fade-leave-active{transition:all 3s cubic-bezier(0.32,0,0.67,0)}.q-transition--slide-fade-enter,.q-transition--slide-fade-leave-to{opacity:0;position:absolute}
